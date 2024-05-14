@@ -39,9 +39,11 @@ jobs:
           reticulate::py_install('DeepForest', pip=TRUE)
           # install.packages('deepforestr')
           devtools::install_local(".", force = TRUE)
-        shell: Rscript {0}
-      - name: Check
-        run: |
           options(crayon.enabled = TRUE)
           rcmdcheck::rcmdcheck(args = "--no-manual", error_on = "error")
         shell: Rscript {0}
+      # - name: Check
+      #   run: |
+      #     options(crayon.enabled = TRUE)
+      #     rcmdcheck::rcmdcheck(args = "--no-manual", error_on = "error")
+      #   shell: Rscript {0}
