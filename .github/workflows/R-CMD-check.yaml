@@ -8,7 +8,7 @@ on:
   pull_request:
     branches: [main]
 
-name: MacOS-Check
+name: R-CMD-check-MacOS
 
 jobs:
   R-CMD-check:
@@ -40,17 +40,8 @@ jobs:
           use-public-rspm: true
 
       - uses: actions/setup-python@v4
-        if: matrix.config.python != 'debug'
         with:
           python-version: ${{ matrix.config.python }}
-
-      - if: matrix.config.python == 'debug'
-        name: setup python3-dbg
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y python3-dbg python3-pip python3-venv
-          sudo ln -sf /usr/bin/python3-dbg /usr/bin/python3
-          sudo ln -sf /usr/bin/python3-dbg /usr/bin/python
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
@@ -61,6 +52,7 @@ jobs:
       - name: Install Miniconda
         uses: conda-incubator/setup-miniconda@v2
         with:
+          miniconda-version: "latest"
           auto-update-conda: true
           python-version: ${{ matrix.config.python }}
           activate-environment: r-reticulate
@@ -69,18 +61,22 @@ jobs:
         shell: Rscript {0}
         run: |
           install.packages("reticulate")
-          reticulate::install_miniconda()
-          reticulate::py_install('DeepForest', pip=TRUE)
           library(reticulate)
           conda_create("r-reticulate")
           conda_install("r-reticulate", "numpy", pip=TRUE)
           use_condaenv("r-reticulate")
 
+      - name: Set RETICULATE_PYTHON environment variable
+        run: echo "RETICULATE_PYTHON=$(python -c 'import sys; print(sys.executable)')" >> $GITHUB_ENV
+
+      - name: Increase verbosity for debugging
+        run: export RETICULATE_REPREX_VERBOSE=1
+
       - name: Run R CMD check
-        run: |
-          echo "RETICULATE_PYTHON=$(python -c 'import sys; print(sys.executable)')" >> $GITHUB_ENV
-          R CMD check --no-manual --as-cran
         shell: bash
+        run: |
+          Rscript -e 'Sys.setenv(RETICULATE_PYTHON=Sys.getenv("RETICULATE_PYTHON"))'
+          R CMD check --no-manual --as-cran
 
       - uses: r-lib/actions/check-r-package@v2
         with:
