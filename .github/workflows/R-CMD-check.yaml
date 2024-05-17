@@ -59,6 +59,7 @@ jobs:
 
       - name: Create and activate conda environment
         run: |
+          conda init
           conda create --name r-reticulate python=3.10 -y
           echo "CONDA_ENV_PATH=$(conda info --base)/envs/r-reticulate" >> $GITHUB_ENV
           conda activate r-reticulate
