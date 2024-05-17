@@ -19,6 +19,7 @@ Authors@R:
               email = "ethan@weecology.org",
               comment = c(ORCID = "0000-0001-6728-7745")))
 Maintainer: Henry Senyondo <henrykironde@gmail.com>
+Author: Ben G. Weinstein, Henry Senyondo, Weecology, Ethan White
 BugReports: https://github.com/weecology/DeepForest/issues
 URL: https://github.com/weecology/DeepForest/ (website),
     https://github.com/weecology/DeepForest/
