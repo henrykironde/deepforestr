@@ -47,9 +47,10 @@ jobs:
       - name: Install and setup Miniconda
         uses: conda-incubator/setup-miniconda@v2
         with:
-          auto-update-conda: true
+          miniconda-version: "latest"
           python-version: '3.10'
           architecture: 'arm64'
+          auto-update-conda: true
 
       - name: Create and activate conda environment
         run: |
