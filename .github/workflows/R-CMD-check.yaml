@@ -7,7 +7,7 @@ on:
   pull_request:
     branches: [main]
 
-name: R-CMD-check
+name: MAcOS-check
 
 jobs:
   R-CMD-check:
@@ -15,7 +15,7 @@ jobs:
 
     name: OS=${{ matrix.config.os }} R=${{ matrix.config.r }} py=${{ matrix.config.python }}
 
-    timeout-minutes: 30
+    timeout-minutes: 60
 
     strategy:
       fail-fast: false
@@ -78,3 +78,4 @@ jobs:
 
 
       - uses: r-lib/actions/check-r-package@v2
+      
