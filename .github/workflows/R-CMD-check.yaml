@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        r: [ '4.4.0' ]  # Specify the R version you want to use
+        r: ['4.4.0']  # Specify the R version you want to use
 
     steps:
       - uses: actions/checkout@v3
@@ -52,16 +52,24 @@ jobs:
           architecture: 'arm64'
           auto-update-conda: true
 
+      - name: Initialize conda
+        run: |
+          conda init bash
+        shell: bash
+
       - name: Create and activate conda environment
         run: |
-          conda create --name r-reticulate python=3.10
+          source ~/.bashrc
+          conda create --name r-reticulate python=3.10 -y
           echo "CONDA_ENV_PATH=$(conda info --base)/envs/r-reticulate" >> $GITHUB_ENV
           conda activate r-reticulate
         shell: bash
 
       - name: Install Python dependencies
         run: |
-          conda install -c conda-forge deepforest
+          source ~/.bashrc
+          conda activate r-reticulate
+          conda install -c conda-forge deepforest -y
         shell: bash
 
       - name: Install R package dependencies
