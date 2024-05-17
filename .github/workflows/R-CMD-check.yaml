@@ -1,5 +1,4 @@
-# Workflow derived from https://github.com/r-lib/actions/tree/master/examples
-# Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
+name: R-CMD-check-MacOS
 
 on:
   workflow_dispatch:
@@ -8,26 +7,14 @@ on:
   pull_request:
     branches: [main]
 
-name: R-CMD-check-MacOS
-
 jobs:
   R-CMD-check:
-    runs-on: ${{ matrix.config.os }}
-
-    name: OS=${{ matrix.config.os }} R=${{ matrix.config.r }} py=${{ matrix.config.python }}
-
-    timeout-minutes: 30
+    runs-on: macos-latest
 
     strategy:
       fail-fast: false
       matrix:
-        config:
-          - { os: macOS-latest  , r: 'release', python: '3.10' }
-
-    env:
-      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-      R_KEEP_PKG_SOURCE: yes
-      PYTORCH_MPS_HIGH_WATERMARK_RATIO: '0.0'
+        r: [ '4.4.0' ]  # Specify the R version you want to use
 
     steps:
       - uses: actions/checkout@v3
@@ -36,46 +23,58 @@ jobs:
 
       - uses: r-lib/actions/setup-r@v2
         with:
-          r-version: ${{ matrix.config.r }}
+          r-version: ${{ matrix.r }}
           use-public-rspm: true
 
-      - uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.config.python }}
+      - name: Install system dependencies
+        run: |
+          brew install libgit2
+          brew install llvm
+          brew install openblas
+        shell: bash
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::rcmdcheck local::.
-          cache-version: 4
-          upgrade: 'TRUE'
+          extra-packages: any::rcmdcheck
+          cache-version: 2
 
-      - name: Install Miniconda
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          architecture: 'arm64'
+
+      - name: Install and setup Miniconda
         uses: conda-incubator/setup-miniconda@v2
         with:
-          miniconda-version: "latest"
           auto-update-conda: true
-          python-version: ${{ matrix.config.python }}
-          activate-environment: r-reticulate
+          python-version: '3.10'
+          architecture: 'arm64'
 
-      - name: Install reticulate and set up conda environment
-        shell: Rscript {0}
+      - name: Create and activate conda environment
         run: |
-          install.packages("reticulate")
-          library(reticulate)
-          conda_create("r-reticulate")
-          conda_install("r-reticulate", "numpy", pip=TRUE)
-          use_condaenv("r-reticulate")
+          conda create --name r-reticulate python=3.10
+          echo "CONDA_ENV_PATH=$(conda info --base)/envs/r-reticulate" >> $GITHUB_ENV
+          conda activate r-reticulate
+        shell: bash
 
-      - name: Set RETICULATE_PYTHON environment variable
+      - name: Install Python dependencies
         run: |
-          echo "RETICULATE_PYTHON=$(conda run -n r-reticulate which python)" >> $GITHUB_ENV
+          conda install -c conda-forge deepforest
+        shell: bash
 
-      - name: Run R CMD check
-        shell: Rscript {0}
+      - name: Install R package dependencies
         run: |
-          Sys.setenv(RETICULATE_PYTHON=Sys.getenv("RETICULATE_PYTHON"))
-          system("R CMD check --no-manual --as-cran .")
+          Rscript -e 'install.packages("reticulate")'
+          Rscript -e 'reticulate::use_condaenv("r-reticulate", required = TRUE)'
+        shell: Rscript
 
-      - uses: r-lib/actions/check-r-package@v2
-        with:
-          args: --no-manual --as-cran
+      - name: Check R package
+        run: |
+          Rscript -e 'rcmdcheck::rcmdcheck(args = c("--no-manual", "--as-cran"), error_on = "warning")'
+        shell: Rscript
+
+      - name: Test R package
+        run: |
+          Rscript -e 'testthat::test_check("deepforestr")'
+        shell: Rscript
