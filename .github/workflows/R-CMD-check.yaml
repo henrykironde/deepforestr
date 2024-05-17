@@ -1,5 +1,6 @@
 # Workflow derived from https://github.com/r-lib/actions/tree/master/examples
 # Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
+
 on:
   workflow_dispatch:
   push:
@@ -7,7 +8,7 @@ on:
   pull_request:
     branches: [main]
 
-name: MAcOS-check
+name: MacOS-Check
 
 jobs:
   R-CMD-check:
@@ -15,7 +16,7 @@ jobs:
 
     name: OS=${{ matrix.config.os }} R=${{ matrix.config.r }} py=${{ matrix.config.python }}
 
-    timeout-minutes: 60
+    timeout-minutes: 30
 
     strategy:
       fail-fast: false
@@ -26,6 +27,7 @@ jobs:
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes
+      PYTORCH_MPS_HIGH_WATERMARK_RATIO: '0.0'
 
     steps:
       - uses: actions/checkout@v3
@@ -45,9 +47,8 @@ jobs:
       - if: matrix.config.python == 'debug'
         name: setup python3-dbg
         run: |
-          # sudo apt-get update
+          sudo apt-get update
           sudo apt-get install -y python3-dbg python3-pip python3-venv
-          # sudo rm -f /usr/bin/python3 /usr/bin/python
           sudo ln -sf /usr/bin/python3-dbg /usr/bin/python3
           sudo ln -sf /usr/bin/python3-dbg /usr/bin/python
 
@@ -57,25 +58,28 @@ jobs:
           cache-version: 4
           upgrade: 'TRUE'
 
-      - name: setup r-reticulate venv
+      - name: Install Miniconda
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          auto-update-conda: true
+          python-version: ${{ matrix.config.python }}
+          activate-environment: r-reticulate
+
+      - name: Install reticulate and set up conda environment
         shell: Rscript {0}
         run: |
-
+          install.packages("reticulate")
           library(reticulate)
+          conda_create("r-reticulate")
+          conda_install("r-reticulate", "numpy", pip=TRUE)
+          use_condaenv("r-reticulate")
 
-          path_to_venv <- virtualenv_create(
-            envname = "r-reticulate",
-            python = Sys.which("python"), # placed on PATH by the setup-python action
-            packages = c(
-              "docutils", "pandas", "scipy", "matplotlib", "ipython",
-              "tabulate", "plotly", "psutil", "kaleido", "wrapt","deepforest"
-            )
-          )
-
-          writeLines(
-            paste0("RETICULATE_PYTHON=", virtualenv_python(path_to_venv)),
-            Sys.getenv("GITHUB_ENV"))
-
+      - name: Run R CMD check
+        run: |
+          echo "RETICULATE_PYTHON=$(python -c 'import sys; print(sys.executable)')" >> $GITHUB_ENV
+          R CMD check --no-manual --as-cran
+        shell: bash
 
       - uses: r-lib/actions/check-r-package@v2
-      
+        with:
+          args: --no-manual --as-cran
