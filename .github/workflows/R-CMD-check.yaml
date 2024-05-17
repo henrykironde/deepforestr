@@ -67,16 +67,14 @@ jobs:
           use_condaenv("r-reticulate")
 
       - name: Set RETICULATE_PYTHON environment variable
-        run: echo "RETICULATE_PYTHON=$(python -c 'import sys; print(sys.executable)')" >> $GITHUB_ENV
-
-      - name: Increase verbosity for debugging
-        run: export RETICULATE_REPREX_VERBOSE=1
+        run: |
+          echo "RETICULATE_PYTHON=$(conda run -n r-reticulate which python)" >> $GITHUB_ENV
 
       - name: Run R CMD check
-        shell: bash
+        shell: Rscript {0}
         run: |
-          Rscript -e 'Sys.setenv(RETICULATE_PYTHON=Sys.getenv("RETICULATE_PYTHON"))'
-          R CMD check --no-manual --as-cran
+          Sys.setenv(RETICULATE_PYTHON=Sys.getenv("RETICULATE_PYTHON"))
+          system("R CMD check --no-manual --as-cran .")
 
       - uses: r-lib/actions/check-r-package@v2
         with:
