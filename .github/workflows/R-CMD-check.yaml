@@ -1,5 +1,6 @@
 # Workflow derived from https://github.com/r-lib/actions/tree/master/examples
 # Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
+
 on:
   workflow_dispatch:
   push:
@@ -46,9 +47,8 @@ jobs:
       - if: matrix.config.python == 'debug'
         name: setup python3-dbg
         run: |
-          # sudo apt-get update
+          sudo apt-get update
           sudo apt-get install -y python3-dbg python3-pip python3-venv
-          # sudo rm -f /usr/bin/python3 /usr/bin/python
           sudo ln -sf /usr/bin/python3-dbg /usr/bin/python3
           sudo ln -sf /usr/bin/python3-dbg /usr/bin/python
 
@@ -58,26 +58,13 @@ jobs:
           cache-version: 4
           upgrade: 'TRUE'
 
-      - name: setup r-reticulate venv
+      - name: Install reticulate and set up conda environment
         shell: Rscript {0}
         run: |
-# 
-#           library(reticulate)
-# 
-#           path_to_venv <- virtualenv_create(
-#             envname = "r-reticulate",
-#             python = Sys.which("python"), # placed on PATH by the setup-python action
-#             packages = c(
-#               "docutils", "pandas", "scipy", "matplotlib", "ipython",
-#               "tabulate", "plotly", "psutil", "kaleido", "wrapt","deepforest"
-#             )
-#           )
-# 
-#           writeLines(
-#             paste0("RETICULATE_PYTHON=", virtualenv_python(path_to_venv)),
-#             Sys.getenv("GITHUB_ENV"))
-          library("reticulate")
+          install.packages("reticulate")
+          library(reticulate)
           conda_create("r-reticulate")
-          conda_install("r-reticulate", "DeepForest", pip=TRUE)
-          use_condaenv("r-reticulate") 
+          conda_install("r-reticulate", "numpy", pip=TRUE)
+          use_condaenv("r-reticulate")
+
       - uses: r-lib/actions/check-r-package@v2
