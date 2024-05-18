@@ -80,9 +80,9 @@ jobs:
         env:
           _R_CHECK_CRAN_INCOMING_REMOTE_: false
         run: |
+          library("reticulate")
           virtualenv_install("r-reticulate", "deepforest")
           use_virtualenv("r-reticulate")
-          library("reticulate")
           options(crayon.enabled = TRUE)
           rcmdcheck::rcmdcheck(args = c("--no-manual", "--as-cran"), error_on = "warning", check_dir = "check")
         shell: Rscript {0}
