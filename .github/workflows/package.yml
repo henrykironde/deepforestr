@@ -7,7 +7,7 @@ on:
   pull_request:
     branches: [main, master]
 
-name: R_MacOS_check
+name: packageMacos
 
 jobs:
   R-CMD-check:
