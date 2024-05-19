@@ -74,14 +74,14 @@ jobs:
         run: |
           Rscript -e 'install.packages("reticulate")'
           Rscript -e 'reticulate::use_condaenv("r-reticulate", required = TRUE)'
-        shell: Rscript
+        shell: Rscript {0}
 
       - name: Check R package
         run: |
           Rscript -e 'rcmdcheck::rcmdcheck(args = c("--no-manual", "--as-cran"), error_on = "warning")'
-        shell: Rscript
+        shell: Rscript {0}
 
       - name: Test R package
         run: |
           Rscript -e 'testthat::test_check("deepforestr")'
-        shell: Rscript
+        shell: Rscript {0}
