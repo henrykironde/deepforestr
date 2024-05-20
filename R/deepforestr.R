@@ -1,10 +1,11 @@
 #' Get example data
 #'
-#' @param path path to the example data file
-#'
+#' @param path Path to the example data file.
+#' @return Data from the specified file.
 #' @examples
-#' deepforestr::get_data("OSBS_029.png")
-#'
+#' \dontrun{
+#'   deepforestr::get_data("OSBS_029.png")
+#' }
 #' @importFrom reticulate import r_to_py
 #' @export
 get_data <- function(path) {
@@ -12,24 +13,27 @@ get_data <- function(path) {
 }
 
 #' Deepforest Model object
-#' 
-#' @examples
-#' deepforestr::df_model()
 #'
+#' @return An instance of the Deepforest model.
+#' @examples
+#' \dontrun{
+#'   model <- deepforestr::df_model()
+#'   print(model)
+#' }
 #' @importFrom reticulate import r_to_py
 #' @export
 df_model <- function() {
   deepforest$main$deepforest()
 }
 
-# global reference to python modules (will be initialized in .onLoad)
+# Global reference to Python modules (will be initialized in .onLoad)
 deepforest <- NULL
 
 .onLoad <- function(libname, pkgname) {
-  ## assignment in parent environment!
+  # Assignment in the parent environment
   try({
     deepforest <<- reticulate::import("deepforest", delay_load = TRUE)
-    # Disable due to failure to test on win cran dev platform
+    # Optionally check for deepforest availability here
     # check_deepforest_availability()
   }, silent = TRUE)
 }
